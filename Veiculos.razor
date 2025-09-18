@@ -1,0 +1,98 @@
+@page "/veiculos"
+@inject ApiService ApiService
+@inject NavigationManager NavigationManager
+
+<h3>Gerenciamento de Veículos</h3>
+
+@if (veiculos == null)
+{
+    <p><em>Carregando...</em></p>
+}
+else
+{
+    <button class="btn btn-success mb-3" @onclick="AdicionarNovoVeiculo">Adicionar Novo Veículo</button>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Marca</th>
+                <th>Ano</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var veiculo in veiculos)
+            {
+                <tr>
+                    <td>
+                        @if (editandoVeiculo?.Id == veiculo.Id) {
+                            <InputText @bind-Value="editandoVeiculo.Nome" class="form-control" />
+                        } else {
+                            @veiculo.Nome
+                        }
+                    </td>
+                    <td>
+                        @if (editandoVeiculo?.Id == veiculo.Id) {
+                            <InputText @bind-Value="editandoVeiculo.Marca" class="form-control" />
+                        } else {
+                            @veiculo.Marca
+                        }
+                    </td>
+                    <td>
+                        @if (editandoVeiculo?.Id == veiculo.Id) {
+                            <InputNumber @bind-Value="editandoVeiculo.Ano" class="form-control" />
+                        } else {
+                            @veiculo.Ano
+                        }
+                    </td>
+                    <td>
+                        @if (editandoVeiculo?.Id == veiculo.Id) {
+                            <button class="btn btn-sm btn-primary" @onclick="() => Salvar(veiculo.Id)">Salvar</button>
+                            <button class="btn btn-sm btn-secondary" @onclick="CancelarEdicao">Cancelar</button>
+                        } else {
+                            <button class="btn btn-sm btn-warning" @onclick="() => Editar(veiculo)">Editar</button>
+                            <button class="btn btn-sm btn-danger" @onclick="() => Deletar(veiculo.Id)">Deletar</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Veiculo>? veiculos;
+    private Veiculo? editandoVeiculo;
+
+    protected override async Task OnInitializedAsync()
+    {
+        veiculos = await ApiService.GetVeiculosAsync();
+    }
+
+    private void AdicionarNovoVeiculo() {
+        // Lógica para navegar para uma página de criação ou abrir um modal
+        Console.WriteLine("Adicionar novo veículo");
+    }
+
+    private void Editar(Veiculo veiculo) {
+        editandoVeiculo = new Veiculo { Id = veiculo.Id, Nome = veiculo.Nome, Marca = veiculo.Marca, Ano = veiculo.Ano };
+    }
+
+    private void CancelarEdicao() {
+        editandoVeiculo = null;
+    }
+
+    private async Task Salvar(int id) {
+        if (editandoVeiculo != null) {
+            await ApiService.UpdateVeiculoAsync(id, editandoVeiculo);
+            veiculos = await ApiService.GetVeiculosAsync(); // Recarrega a lista
+            editandoVeiculo = null;
+        }
+    }
+
+    private async Task Deletar(int id) {
+        await ApiService.DeleteVeiculoAsync(id);
+        veiculos = await ApiService.GetVeiculosAsync(); // Recarrega a lista
+    }
+}

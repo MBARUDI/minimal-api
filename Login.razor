@@ -1,0 +1,44 @@
+@page "/login"
+@inject ApiService ApiService
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+
+<h3>Login</h3>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+<div class="card">
+    <div class="card-body">
+        <EditForm Model="@loginDto" OnValidSubmit="HandleLogin">
+            <DataAnnotationsValidator />
+            <div class="form-group">
+                <label>Email</label>
+                <InputText @bind-Value="loginDto.Email" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label>Senha</label>
+                <InputText @bind-Value="loginDto.Senha" type="password" class="form-control" />
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Entrar</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private LoginDTO loginDto = new("", "");
+    private string? errorMessage;
+
+    private async Task HandleLogin()
+    {
+        var result = await ApiService.LoginAsync(loginDto);
+        if (result != null && !string.IsNullOrEmpty(result.Token)) {
+            await AuthService.LoginAsync(result.Token);
+            NavigationManager.NavigateTo("/veiculos");
+        } else {
+            errorMessage = "Email ou senha inválidos.";
+        }
+    }
+}
